@@ -13,15 +13,15 @@ import {
   User, LayoutDashboard, ArrowLeft, 
   ClipboardList, HelpCircle, Check,
   Info, Sparkles, Fingerprint, Heart,
-  Zap, MessageCircle
+  Zap, MessageCircle, Building
 } from 'lucide-react';
 
 /**
- * PORTAL SURVEI UNMARIS V4.0 - MOBILE OPTIMIZED & FRIENDLY
- * Filosofi: Minimalis, Akrab, dan Efisien.
+ * PORTAL SURVEI UNMARIS V4.5 - CIVITAS ACADEMICA EDITION
+ * Mendukung Dosen, Staf, dan Mahasiswa.
  */
 
-// --- KOMPONEN: LOGIN (Sapaan Hangat) ---
+// --- KOMPONEN: LOGIN (Inklusif) ---
 const LoginPage = ({ onLoginSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,7 +33,7 @@ const LoginPage = ({ onLoginSuccess }) => {
     const password = e.target.password.value.trim();
 
     if (!nim || !password) {
-      setError('NIM dan Password jangan kosong ya!');
+      setError('ID dan Password jangan kosong ya!');
       return;
     }
 
@@ -67,10 +67,10 @@ const LoginPage = ({ onLoginSuccess }) => {
     <div className="min-h-screen bg-white flex flex-col justify-center px-6 py-12 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm text-center">
         <div className="inline-flex p-4 bg-blue-50 rounded-[2rem] text-[#1B2A66] mb-6 shadow-sm">
-           <Fingerprint size={48} strokeWidth={1.5} />
+           <Building size={48} strokeWidth={1.5} />
         </div>
-        <h2 className="text-3xl font-black text-slate-900 tracking-tight">Halo, Selamat Datang!</h2>
-        <p className="mt-2 text-sm font-medium text-slate-400">Masuk dengan akun SIAKAD UNMARIS Anda.</p>
+        <h2 className="text-3xl font-black text-slate-900 tracking-tight">Selamat Datang!</h2>
+        <p className="mt-2 text-sm font-medium text-slate-400 px-4">Portal Survei Terpadu untuk <b>Seluruh Civitas</b> UNMARIS.</p>
       </div>
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
@@ -83,7 +83,7 @@ const LoginPage = ({ onLoginSuccess }) => {
 
           <div className="space-y-4">
             <div>
-              <input name="nim" required placeholder="Masukkan NIM / NIDN" className="block w-full px-6 py-5 rounded-2xl bg-slate-50 border-transparent focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-[#1B2A66] transition-all text-sm font-bold placeholder:text-slate-300" />
+              <input name="nim" required placeholder="NIM / NIDN / ID Staf" className="block w-full px-6 py-5 rounded-2xl bg-slate-50 border-transparent focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-[#1B2A66] transition-all text-sm font-bold placeholder:text-slate-300" />
             </div>
             <div>
               <input name="password" type="password" required placeholder="Masukkan Password" className="block w-full px-6 py-5 rounded-2xl bg-slate-50 border-transparent focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-[#1B2A66] transition-all text-sm font-bold placeholder:text-slate-300" />
@@ -103,7 +103,7 @@ const LoginPage = ({ onLoginSuccess }) => {
   );
 };
 
-// --- KOMPONEN: DASHBOARD (Ringkas & Informatif) ---
+// --- KOMPONEN: DASHBOARD (Inklusif) ---
 const DashboardPage = ({ user, token, onLogout }) => {
   const [surveys, setSurveys] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -126,13 +126,20 @@ const DashboardPage = ({ user, token, onLogout }) => {
     fetchSurveys();
   }, [token]);
 
+  // Sapaan berdasarkan role (Opsional tapi bagus untuk UX)
+  const getGreeting = () => {
+    const role = user.role.toLowerCase();
+    if (role.includes('dosen')) return 'Bapak/Ibu';
+    return 'Halo';
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       {/* Header Mobile Friendly */}
       <header className="bg-white border-b border-slate-100 px-6 py-6 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md bg-white/90">
          <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-[#1B2A66] rounded-lg flex items-center justify-center text-[#FACC15] font-black italic">S</div>
-            <span className="font-black text-slate-800 tracking-tighter uppercase text-sm">Portal Survei</span>
+            <span className="font-black text-slate-800 tracking-tighter uppercase text-sm">Portal Civitas</span>
          </div>
          <button onClick={onLogout} className="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 rounded-xl hover:text-red-500 transition-colors">
             <LogOut size={18} />
@@ -146,7 +153,7 @@ const DashboardPage = ({ user, token, onLogout }) => {
               {user.name[0]}
            </div>
            <div className="flex flex-col">
-              <h2 className="text-xl font-black text-slate-800 leading-tight">Halo, {user.name.split(' ')[0]}!</h2>
+              <h2 className="text-xl font-black text-slate-800 leading-tight">{getGreeting()} {user.name.split(' ')[0]}</h2>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{user.role} • {user.identifier}</p>
            </div>
         </section>
@@ -154,12 +161,12 @@ const DashboardPage = ({ user, token, onLogout }) => {
         {/* Info Box */}
         <div className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex items-center gap-4">
            <div className="p-3 bg-white rounded-2xl text-[#1B2A66] shadow-sm"><Zap size={20} fill="currentColor" /></div>
-           <p className="text-[11px] font-bold text-blue-900 leading-relaxed">Ada <b>{surveys.filter(s => !s.has_submitted).length} survei baru</b> yang menanti masukan Anda hari ini.</p>
+           <p className="text-[11px] font-bold text-blue-900 leading-relaxed">Ada <b>{surveys.filter(s => !s.has_submitted).length} survei</b> yang menanti kontribusi Anda hari ini.</p>
         </div>
 
         {/* List Survei */}
         <div className="space-y-4">
-          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Daftar Survei</h3>
+          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Tugas Survei Aktif</h3>
           
           {loading ? (
             <div className="space-y-4">
@@ -175,7 +182,7 @@ const DashboardPage = ({ user, token, onLogout }) => {
                 <div className="flex justify-between items-start">
                    <div className="flex flex-col gap-1">
                       <h4 className="font-black text-slate-800 text-md leading-tight">{survey.title}</h4>
-                      <p className="text-[11px] text-slate-400 font-medium line-clamp-1">{survey.description || 'Mari berikan penilaian jujur Anda.'}</p>
+                      <p className="text-[11px] text-slate-400 font-medium line-clamp-1">{survey.description || 'Kontribusi Anda sangat berharga bagi kami.'}</p>
                    </div>
                    {survey.has_submitted ? (
                       <div className="bg-green-50 text-green-500 p-2 rounded-full shadow-inner"><Check size={14} strokeWidth={3} /></div>
@@ -186,7 +193,7 @@ const DashboardPage = ({ user, token, onLogout }) => {
                 {!survey.has_submitted && (
                    <div className="mt-4 flex items-center gap-2">
                       <span className="w-1.5 h-1.5 bg-[#FACC15] rounded-full animate-ping"></span>
-                      <span className="text-[9px] font-black text-[#1B2A66] uppercase tracking-widest">Siap Diisi</span>
+                      <span className="text-[9px] font-black text-[#1B2A66] uppercase tracking-widest">Belum Diisi</span>
                    </div>
                 )}
               </div>
@@ -194,7 +201,7 @@ const DashboardPage = ({ user, token, onLogout }) => {
           ) : (
             <div className="text-center py-12">
                <MessageCircle size={40} className="mx-auto text-slate-200 mb-4" />
-               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Belum ada survei aktif.</p>
+               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Belum ada survei baru.</p>
             </div>
           )}
         </div>
@@ -203,7 +210,7 @@ const DashboardPage = ({ user, token, onLogout }) => {
   );
 };
 
-// --- KOMPONEN: FORM SURVEI (Fokus & Nyaman) ---
+// --- KOMPONEN: FORM SURVEI (Tetap Sama) ---
 const SurveyPage = ({ token }) => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -248,7 +255,7 @@ const SurveyPage = ({ token }) => {
     
     if (missing.length > 0) {
         setMissingFields(missing);
-        setError('Ada pertanyaan wajib yang terlewat nih!');
+        setError('Ada bagian wajib yang belum terisi nih!');
         const el = document.getElementById(`q-${missing[0]}`);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
@@ -291,7 +298,7 @@ const SurveyPage = ({ token }) => {
       <main className="px-5 py-8 space-y-6 w-full max-w-lg">
         <div className="px-2">
             <h1 className="text-2xl font-black text-slate-800 leading-tight">{surveyData?.title}</h1>
-            <p className="text-xs text-slate-400 mt-2 font-medium leading-relaxed">{surveyData?.description || 'Mohon berikan masukan terbaik Anda untuk kemajuan kampus kita.'}</p>
+            <p className="text-xs text-slate-400 mt-2 font-medium leading-relaxed">{surveyData?.description || 'Mohon berikan penilaian objektif Bapak/Ibu/Saudara untuk kemajuan kampus.'}</p>
         </div>
 
         {error && (
@@ -307,7 +314,7 @@ const SurveyPage = ({ token }) => {
             <div id={`q-${idx}`} key={idx} className={`bg-white rounded-[2.5rem] p-8 border-2 transition-all duration-500 ${isMissing ? 'border-rose-400' : isAnswered ? 'border-green-100 bg-green-50/20' : 'border-white shadow-xl shadow-slate-200/40'}`}>
                 <div className="flex gap-4 items-start mb-6">
                     <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-[10px] shrink-0 ${isAnswered ? 'bg-green-500 text-white shadow-lg shadow-green-100' : 'bg-[#1B2A66] text-[#FACC15]'}`}>
-                        {idx + 1}
+                        {isAnswered ? <Check size={14} strokeWidth={3} /> : idx + 1}
                     </span>
                     <h3 className="font-bold text-slate-800 text-lg leading-snug">{field.data.question}</h3>
                 </div>
@@ -324,26 +331,26 @@ const SurveyPage = ({ token }) => {
                 )}
 
                 {(field.type === 'textarea' || field.type === 'text') && (
-                   <textarea value={answers[`answer_${idx}`] || ""} onChange={(e) => setAnswers({...answers, [`answer_${idx}`]: e.target.value})} className="w-full p-6 bg-slate-50 rounded-[2rem] focus:bg-white focus:ring-4 focus:ring-blue-50 border-transparent outline-none text-sm font-bold placeholder:text-slate-200 min-h-[120px]" placeholder="Ketik jawabanmu di sini..." />
+                   <textarea value={answers[`answer_${idx}`] || ""} onChange={(e) => setAnswers({...answers, [`answer_${idx}`]: e.target.value})} className="w-full p-6 bg-slate-50 rounded-[2rem] focus:bg-white focus:ring-4 focus:ring-blue-50 border-transparent outline-none text-sm font-bold placeholder:text-slate-200 min-h-[120px]" placeholder="Bagikan pendapat Anda di sini..." />
                 )}
 
                 {field.type === 'select' && (
                    <select value={answers[`answer_${idx}`] || ""} onChange={(e) => setAnswers({...answers, [`answer_${idx}`]: e.target.value})} className="w-full p-6 bg-slate-50 rounded-[2rem] focus:bg-white border-transparent outline-none text-sm font-bold appearance-none cursor-pointer">
-                      <option value="">-- Tap untuk pilih --</option>
+                      <option value="">-- Tap untuk memilih --</option>
                       {field.data.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                    </select>
                 )}
 
-                {isMissing && <p className="mt-4 text-[9px] font-black text-rose-500 uppercase tracking-widest animate-pulse">Pertanyaan ini penting, tolong diisi ya!</p>}
+                {isMissing && <p className="mt-4 text-[9px] font-black text-rose-500 uppercase tracking-widest animate-pulse">Mohon isi bagian ini terlebih dahulu ya!</p>}
             </div>
           );
         })}
 
         <div className="py-10 text-center">
            <button onClick={handleSubmit} disabled={submitting} className="w-full bg-[#1B2A66] text-white py-6 rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-blue-900/30 transition-all active:scale-95 disabled:opacity-50">
-              {submitting ? 'Sedang Menyimpan...' : 'Kirim Sekarang'}
+              {submitting ? 'Sedang Menyimpan...' : 'Kirim Penilaian'}
            </button>
-           <p className="mt-6 text-[10px] font-bold text-slate-300">Data Anda dilindungi oleh Sistem Kampus.</p>
+           <p className="mt-6 text-[10px] font-bold text-slate-300 uppercase tracking-widest">Kerahasiaan Data Terjamin</p>
         </div>
       </main>
     </div>
@@ -362,12 +369,12 @@ const SuccessPage = ({ user, onLogout }) => {
           </div>
           <Sparkles className="absolute -top-4 -right-4 text-yellow-400 animate-bounce" size={32} />
        </div>
-       <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-4">Mantap, Selesai!</h2>
-       <p className="text-slate-400 text-sm font-medium leading-relaxed mb-12">Terima kasih, <b>{user?.name.split(' ')[0]}</b>. Masukan Anda sangat berarti bagi perbaikan kualitas layanan UNMARIS.</p>
+       <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-4">Laporan Terkirim!</h2>
+       <p className="text-slate-400 text-sm font-medium leading-relaxed mb-12 px-6">Terima kasih atas kontribusi Anda, <b>{user?.name.split(' ')[0]}</b>. Masukan Anda sangat berarti bagi peningkatan mutu Stella Maris.</p>
        
        <div className="w-full max-w-xs space-y-4">
           <button onClick={() => navigate('/dashboard')} className="w-full py-5 rounded-2xl bg-[#1B2A66] text-white font-black text-xs uppercase tracking-widest shadow-xl">Balik ke Beranda</button>
-          <button onClick={onLogout} className="w-full py-5 text-slate-300 font-black text-[10px] uppercase tracking-widest hover:text-red-500 transition-colors">Keluar Sesi</button>
+          <button onClick={onLogout} className="w-full py-5 text-slate-300 font-black text-[10px] uppercase tracking-widest hover:text-red-500 transition-colors">Selesaikan Sesi</button>
        </div>
     </div>
   );
