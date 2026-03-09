@@ -14,12 +14,12 @@ import {
   ClipboardList, HelpCircle, Check,
   Info, Sparkles, Fingerprint, Heart,
   Zap, MessageCircle, Building, History,
-  Award
+  Award, X
 } from 'lucide-react';
 
 /**
- * PORTAL SURVEI UNMARIS V5.0 - CIVITAS ACADEMICA EDITION
- * UX Refactored: Tabbed Dashboard & Progress Tracker
+ * PORTAL SURVEI UNMARIS V5.1 - CIVITAS ACADEMICA EDITION
+ * UX Refactored: Tabbed Dashboard, Micro-interactions, & Smart Greetings
  */
 
 // --- KOMPONEN: LOGIN ---
@@ -104,11 +104,11 @@ const LoginPage = ({ onLoginSuccess }) => {
   );
 };
 
-// --- KOMPONEN: DASHBOARD (UX Diperbarui) ---
+// --- KOMPONEN: DASHBOARD ---
 const DashboardPage = ({ user, token, onLogout }) => {
   const [surveys, setSurveys] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('pending'); // 'pending' atau 'completed'
+  const [activeTab, setActiveTab] = useState('pending');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -128,22 +128,27 @@ const DashboardPage = ({ user, token, onLogout }) => {
     fetchSurveys();
   }, [token]);
 
-  // Klasifikasi data
   const pendingSurveys = surveys.filter(s => !s.has_submitted);
   const completedSurveys = surveys.filter(s => s.has_submitted);
   const totalSurveys = surveys.length;
   const completionRate = totalSurveys === 0 ? 0 : Math.round((completedSurveys.length / totalSurveys) * 100);
 
-  const getGreeting = () => {
-    const role = user.role.toLowerCase();
-    if (role.includes('dosen')) return 'Bapak/Ibu';
-    return 'Halo';
+  // Sapaan Dinamis berdasarkan Waktu & Role
+  const getDynamicGreeting = () => {
+    const hour = new Date().getHours();
+    let timeGreeting = 'Selamat Pagi';
+    if (hour >= 11 && hour < 15) timeGreeting = 'Selamat Siang';
+    else if (hour >= 15 && hour < 18) timeGreeting = 'Selamat Sore';
+    else if (hour >= 18) timeGreeting = 'Selamat Malam';
+
+    const role = user.role?.toLowerCase() || '';
+    const title = (role.includes('dosen') || role.includes('staf') || role.includes('tendik')) ? 'Bapak/Ibu ' : '';
+    return `${timeGreeting}, ${title}`;
   };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      {/* Header Sticky */}
-      <header className="bg-white/90 border-b border-slate-100 px-6 py-5 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md">
+      <header className="bg-white/90 border-b border-slate-100 px-6 py-5 flex justify-between items-center sticky top-0 z-40 backdrop-blur-md">
          <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-gradient-to-br from-[#1B2A66] to-blue-700 rounded-xl flex items-center justify-center text-[#FACC15] font-black italic shadow-lg">S</div>
             <div className="flex flex-col">
@@ -157,7 +162,6 @@ const DashboardPage = ({ user, token, onLogout }) => {
       </header>
 
       <main className="px-6 py-8 space-y-8 max-w-lg mx-auto pb-24">
-        {/* Identitas & Progress Ringkas */}
         <section className="flex items-center justify-between">
            <div className="flex items-center gap-4">
                <div className="relative">
@@ -171,8 +175,8 @@ const DashboardPage = ({ user, token, onLogout }) => {
                   )}
                </div>
                <div className="flex flex-col">
-                  <h2 className="text-lg font-black text-slate-800 leading-tight">{getGreeting()} {user.name.split(' ')[0]}</h2>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{user.role}</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{getDynamicGreeting()}</p>
+                  <h2 className="text-lg font-black text-slate-800 leading-tight line-clamp-1">{user.name.split(' ')[0]}</h2>
                </div>
            </div>
            
@@ -182,7 +186,6 @@ const DashboardPage = ({ user, token, onLogout }) => {
            </div>
         </section>
 
-        {/* Tab Navigasi ala iOS */}
         <div className="flex p-1 bg-slate-200/50 rounded-[1.5rem]">
           <button 
             onClick={() => setActiveTab('pending')}
@@ -203,15 +206,12 @@ const DashboardPage = ({ user, token, onLogout }) => {
           </button>
         </div>
 
-        {/* Render Konten Berdasarkan Tab */}
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           {loading ? (
-            // Skeleton Loading
             <div className="space-y-4">
                {[1,2].map(i => <div key={i} className="h-28 bg-white/50 rounded-[2rem] animate-pulse shadow-sm"></div>)}
             </div>
           ) : activeTab === 'pending' ? (
-            /* --- TAB TUGAS BARU --- */
             pendingSurveys.length > 0 ? (
               pendingSurveys.map(survey => (
                 <div 
@@ -236,7 +236,6 @@ const DashboardPage = ({ user, token, onLogout }) => {
                 </div>
               ))
             ) : (
-              // Empty State Tugas
               <div className="text-center py-16 bg-white rounded-[2.5rem] border border-slate-100 border-dashed">
                  <div className="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CheckCircle2 size={40} strokeWidth={2} />
@@ -246,7 +245,6 @@ const DashboardPage = ({ user, token, onLogout }) => {
               </div>
             )
           ) : (
-            /* --- TAB RIWAYAT SELESAI --- */
             completedSurveys.length > 0 ? (
               completedSurveys.map(survey => (
                 <div 
@@ -265,7 +263,6 @@ const DashboardPage = ({ user, token, onLogout }) => {
                 </div>
               ))
             ) : (
-               // Empty State Riwayat
               <div className="text-center py-16">
                  <ClipboardList size={48} className="mx-auto text-slate-200 mb-4" strokeWidth={1.5} />
                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Belum ada riwayat survei.</p>
@@ -278,7 +275,7 @@ const DashboardPage = ({ user, token, onLogout }) => {
   );
 };
 
-// --- KOMPONEN: FORM SURVEI (Tetap Sama) ---
+// --- KOMPONEN: FORM SURVEI (Dengan Micro-interactions) ---
 const SurveyPage = ({ token }) => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -288,6 +285,18 @@ const SurveyPage = ({ token }) => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [missingFields, setMissingFields] = useState([]);
+  
+  // State untuk Modal Konfirmasi
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  // Label Deskripsi untuk Rating (Bintang)
+  const ratingLabels = {
+    1: "Sangat Buruk 😞",
+    2: "Kurang Baik 😕",
+    3: "Cukup 😐",
+    4: "Baik 🙂",
+    5: "Sangat Memuaskan 😍"
+  };
 
   useEffect(() => {
     const fetchSurvey = async () => {
@@ -315,7 +324,7 @@ const SurveyPage = ({ token }) => {
     return Math.round((answeredCount / surveyData.schema.length) * 100);
   };
 
-  const handleSubmit = async () => {
+  const handlePreSubmit = () => {
     const missing = [];
     surveyData.schema.forEach((field, index) => {
       if (field.data.is_required && !answers[`answer_${index}`]) missing.push(index);
@@ -328,7 +337,13 @@ const SurveyPage = ({ token }) => {
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
     }
+    
+    // Jika lolos validasi, munculkan modal konfirmasi
+    setShowConfirm(true);
+  };
 
+  const performSubmit = async () => {
+    setShowConfirm(false);
     setSubmitting(true);
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/surveys/${id}/submit`, {
@@ -351,12 +366,12 @@ const SurveyPage = ({ token }) => {
   if (loading) return <div className="min-h-screen bg-white flex flex-col items-center justify-center animate-pulse"><div className="w-12 h-12 border-4 border-slate-100 border-t-[#1B2A66] rounded-full animate-spin"></div></div>;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-24 flex flex-col items-center">
+    <div className="min-h-screen bg-[#F8FAFC] pb-24 flex flex-col items-center relative">
       <div className="fixed top-0 left-0 w-full h-1.5 bg-slate-100 z-[60]">
         <div className="h-full bg-blue-600 transition-all duration-500 shadow-lg" style={{ width: `${calculateProgress()}%` }}></div>
       </div>
 
-      <header className="w-full bg-white/90 border-b border-slate-100 px-6 py-4 sticky top-1.5 z-50 flex justify-between items-center backdrop-blur-md">
+      <header className="w-full bg-white/90 border-b border-slate-100 px-6 py-4 sticky top-1.5 z-40 flex justify-between items-center backdrop-blur-md">
         <button onClick={() => navigate('/dashboard')} className="p-2 bg-slate-50 hover:bg-slate-100 rounded-full text-slate-500 transition-colors"><ArrowLeft size={18} /></button>
         <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-4 py-1.5 rounded-full uppercase tracking-widest">{calculateProgress()}% Selesai</span>
         <div className="w-9"></div>
@@ -369,7 +384,7 @@ const SurveyPage = ({ token }) => {
         </div>
 
         {error && (
-            <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-3 sticky top-20 z-40 shadow-xl">
+            <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-3 sticky top-20 z-30 shadow-xl">
                <AlertCircle size={16} /> {error}
             </div>
         )}
@@ -387,13 +402,23 @@ const SurveyPage = ({ token }) => {
                 </div>
 
                 {field.type === 'rating' && (
-                   <div className="flex justify-between gap-2 max-w-sm mx-auto">
-                      {[1,2,3,4,5].map(v => (
-                         <button key={v} onClick={() => setAnswers({...answers, [`answer_${idx}`]: v})} className={`flex-1 aspect-square rounded-2xl flex flex-col items-center justify-center transition-all ${answers[`answer_${idx}`] === v ? 'bg-[#1B2A66] text-[#FACC15] shadow-xl scale-110' : 'bg-slate-50 text-slate-300 hover:bg-slate-100'}`}>
-                            <Star size={20} fill={answers[`answer_${idx}`] === v ? "currentColor" : "none"} />
-                            <span className="text-[9px] font-black mt-1">{v}</span>
-                         </button>
-                      ))}
+                   <div className="flex flex-col gap-3">
+                       <div className="flex justify-between gap-2 max-w-sm mx-auto w-full">
+                          {[1,2,3,4,5].map(v => (
+                             <button key={v} onClick={() => setAnswers({...answers, [`answer_${idx}`]: v})} className={`flex-1 aspect-square rounded-2xl flex flex-col items-center justify-center transition-all ${answers[`answer_${idx}`] === v ? 'bg-[#1B2A66] text-[#FACC15] shadow-xl scale-110' : 'bg-slate-50 text-slate-300 hover:bg-slate-100'}`}>
+                                <Star size={20} fill={answers[`answer_${idx}`] === v ? "currentColor" : "none"} />
+                                <span className="text-[9px] font-black mt-1">{v}</span>
+                             </button>
+                          ))}
+                       </div>
+                       {/* Label Emosi Animasi */}
+                       <div className="h-4 text-center overflow-hidden">
+                           {answers[`answer_${idx}`] && (
+                               <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest animate-in slide-in-from-bottom-2 fade-in duration-300">
+                                   {ratingLabels[answers[`answer_${idx}`]]}
+                               </p>
+                           )}
+                       </div>
                    </div>
                 )}
 
@@ -414,7 +439,7 @@ const SurveyPage = ({ token }) => {
         })}
 
         <div className="py-8">
-           <button onClick={handleSubmit} disabled={submitting} className="w-full bg-[#1B2A66] text-white py-5 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.1em] shadow-xl shadow-blue-900/20 hover:bg-blue-800 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2">
+           <button onClick={handlePreSubmit} disabled={submitting} className="w-full bg-[#1B2A66] text-white py-5 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.1em] shadow-xl shadow-blue-900/20 hover:bg-blue-800 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2">
               {submitting ? 'Menyimpan Data...' : <><Send size={18} /> Kirim Penilaian</>}
            </button>
            <div className="flex items-center justify-center gap-2 mt-5">
@@ -423,6 +448,24 @@ const SurveyPage = ({ token }) => {
            </div>
         </div>
       </main>
+
+      {/* MODAL KONFIRMASI PENGIRIMAN */}
+      {showConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+                  <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6">
+                      <HelpCircle size={32} strokeWidth={2} />
+                  </div>
+                  <h3 className="text-xl font-black text-slate-800 mb-2">Kirim Penilaian?</h3>
+                  <p className="text-sm text-slate-500 font-medium leading-relaxed mb-8">Pastikan semua jawaban Anda sudah sesuai. Data yang telah dikirim tidak dapat diubah kembali.</p>
+                  
+                  <div className="flex gap-3">
+                      <button onClick={() => setShowConfirm(false)} className="flex-1 py-4 bg-slate-100 text-slate-500 font-bold rounded-2xl text-sm transition-colors hover:bg-slate-200">Batal</button>
+                      <button onClick={performSubmit} className="flex-1 py-4 bg-[#1B2A66] text-white font-bold rounded-2xl text-sm shadow-lg shadow-blue-900/20 transition-all active:scale-95">Ya, Kirim</button>
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 };
