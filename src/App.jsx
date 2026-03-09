@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BrowserRouter as Router, 
   Routes, 
@@ -13,15 +13,16 @@ import {
   User, LayoutDashboard, ArrowLeft, 
   ClipboardList, HelpCircle, Check,
   Info, Sparkles, Fingerprint, Heart,
-  Zap, MessageCircle, Building
+  Zap, MessageCircle, Building, History,
+  Award
 } from 'lucide-react';
 
 /**
- * PORTAL SURVEI UNMARIS V4.5 - CIVITAS ACADEMICA EDITION
- * Mendukung Dosen, Staf, dan Mahasiswa.
+ * PORTAL SURVEI UNMARIS V5.0 - CIVITAS ACADEMICA EDITION
+ * UX Refactored: Tabbed Dashboard & Progress Tracker
  */
 
-// --- KOMPONEN: LOGIN (Inklusif) ---
+// --- KOMPONEN: LOGIN ---
 const LoginPage = ({ onLoginSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -103,10 +104,11 @@ const LoginPage = ({ onLoginSuccess }) => {
   );
 };
 
-// --- KOMPONEN: DASHBOARD (Inklusif) ---
+// --- KOMPONEN: DASHBOARD (UX Diperbarui) ---
 const DashboardPage = ({ user, token, onLogout }) => {
   const [surveys, setSurveys] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('pending'); // 'pending' atau 'completed'
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -126,7 +128,12 @@ const DashboardPage = ({ user, token, onLogout }) => {
     fetchSurveys();
   }, [token]);
 
-  // Sapaan berdasarkan role (Opsional tapi bagus untuk UX)
+  // Klasifikasi data
+  const pendingSurveys = surveys.filter(s => !s.has_submitted);
+  const completedSurveys = surveys.filter(s => s.has_submitted);
+  const totalSurveys = surveys.length;
+  const completionRate = totalSurveys === 0 ? 0 : Math.round((completedSurveys.length / totalSurveys) * 100);
+
   const getGreeting = () => {
     const role = user.role.toLowerCase();
     if (role.includes('dosen')) return 'Bapak/Ibu';
@@ -135,74 +142,135 @@ const DashboardPage = ({ user, token, onLogout }) => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      {/* Header Mobile Friendly */}
-      <header className="bg-white border-b border-slate-100 px-6 py-6 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md bg-white/90">
-         <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#1B2A66] rounded-lg flex items-center justify-center text-[#FACC15] font-black italic">S</div>
-            <span className="font-black text-slate-800 tracking-tighter uppercase text-sm">Portal Civitas</span>
+      {/* Header Sticky */}
+      <header className="bg-white/90 border-b border-slate-100 px-6 py-5 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md">
+         <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-gradient-to-br from-[#1B2A66] to-blue-700 rounded-xl flex items-center justify-center text-[#FACC15] font-black italic shadow-lg">S</div>
+            <div className="flex flex-col">
+              <span className="font-black text-slate-800 tracking-tight text-sm leading-none">Portal Civitas</span>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">UNMARIS</span>
+            </div>
          </div>
-         <button onClick={onLogout} className="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 rounded-xl hover:text-red-500 transition-colors">
+         <button onClick={onLogout} className="p-2.5 bg-slate-50 text-slate-400 rounded-full hover:text-red-500 hover:bg-red-50 transition-colors">
             <LogOut size={18} />
          </button>
       </header>
 
-      <main className="px-6 py-8 space-y-8 max-w-lg mx-auto">
-        {/* Identitas Ringkas */}
-        <section className="flex items-center gap-4">
-           <div className="w-16 h-16 bg-gradient-to-br from-[#1B2A66] to-blue-700 rounded-[1.5rem] flex items-center justify-center text-white font-black text-xl shadow-lg">
-              {user.name[0]}
+      <main className="px-6 py-8 space-y-8 max-w-lg mx-auto pb-24">
+        {/* Identitas & Progress Ringkas */}
+        <section className="flex items-center justify-between">
+           <div className="flex items-center gap-4">
+               <div className="relative">
+                  <div className="w-14 h-14 bg-gradient-to-br from-indigo-100 to-blue-50 rounded-[1.2rem] flex items-center justify-center text-[#1B2A66] font-black text-xl shadow-inner border border-white">
+                    {user.name[0]}
+                  </div>
+                  {completionRate === 100 && totalSurveys > 0 && (
+                    <div className="absolute -bottom-1 -right-1 bg-green-500 text-white p-1 rounded-full border-2 border-[#F8FAFC]">
+                      <Award size={12} strokeWidth={3} />
+                    </div>
+                  )}
+               </div>
+               <div className="flex flex-col">
+                  <h2 className="text-lg font-black text-slate-800 leading-tight">{getGreeting()} {user.name.split(' ')[0]}</h2>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{user.role}</p>
+               </div>
            </div>
-           <div className="flex flex-col">
-              <h2 className="text-xl font-black text-slate-800 leading-tight">{getGreeting()} {user.name.split(' ')[0]}</h2>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{user.role} • {user.identifier}</p>
+           
+           <div className="text-right flex flex-col items-end">
+              <span className="text-2xl font-black text-[#1B2A66]">{completionRate}%</span>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Selesai</span>
            </div>
         </section>
 
-        {/* Info Box */}
-        <div className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex items-center gap-4">
-           <div className="p-3 bg-white rounded-2xl text-[#1B2A66] shadow-sm"><Zap size={20} fill="currentColor" /></div>
-           <p className="text-[11px] font-bold text-blue-900 leading-relaxed">Ada <b>{surveys.filter(s => !s.has_submitted).length} survei</b> yang menanti kontribusi Anda hari ini.</p>
+        {/* Tab Navigasi ala iOS */}
+        <div className="flex p-1 bg-slate-200/50 rounded-[1.5rem]">
+          <button 
+            onClick={() => setActiveTab('pending')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-[1.2rem] text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === 'pending' ? 'bg-white text-[#1B2A66] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            <Zap size={14} className={activeTab === 'pending' ? 'fill-current' : ''} />
+            Tugas Baru
+            {pendingSurveys.length > 0 && (
+              <span className="bg-rose-500 text-white text-[9px] px-1.5 py-0.5 rounded-md ml-1 leading-none">{pendingSurveys.length}</span>
+            )}
+          </button>
+          <button 
+            onClick={() => setActiveTab('completed')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-[1.2rem] text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === 'completed' ? 'bg-white text-[#1B2A66] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            <History size={14} />
+            Riwayat
+          </button>
         </div>
 
-        {/* List Survei */}
-        <div className="space-y-4">
-          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Tugas Survei Aktif</h3>
-          
+        {/* Render Konten Berdasarkan Tab */}
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           {loading ? (
+            // Skeleton Loading
             <div className="space-y-4">
-               {[1,2].map(i => <div key={i} className="h-32 bg-white rounded-[2rem] animate-pulse shadow-sm"></div>)}
+               {[1,2].map(i => <div key={i} className="h-28 bg-white/50 rounded-[2rem] animate-pulse shadow-sm"></div>)}
             </div>
-          ) : surveys.length > 0 ? (
-            surveys.map(survey => (
-              <div 
-                key={survey.id} 
-                onClick={() => !survey.has_submitted && navigate(`/survey/${survey.id}`)}
-                className={`bg-white rounded-[2.5rem] p-6 shadow-sm border-2 transition-all active:scale-[0.98] cursor-pointer ${survey.has_submitted ? 'opacity-60 border-transparent bg-slate-50/50' : 'border-white shadow-slate-200/50'}`}
-              >
-                <div className="flex justify-between items-start">
-                   <div className="flex flex-col gap-1">
-                      <h4 className="font-black text-slate-800 text-md leading-tight">{survey.title}</h4>
-                      <p className="text-[11px] text-slate-400 font-medium line-clamp-1">{survey.description || 'Kontribusi Anda sangat berharga bagi kami.'}</p>
-                   </div>
-                   {survey.has_submitted ? (
-                      <div className="bg-green-50 text-green-500 p-2 rounded-full shadow-inner"><Check size={14} strokeWidth={3} /></div>
-                   ) : (
-                      <div className="bg-blue-50 text-[#1B2A66] p-2 rounded-full"><ChevronRight size={14} strokeWidth={3} /></div>
-                   )}
+          ) : activeTab === 'pending' ? (
+            /* --- TAB TUGAS BARU --- */
+            pendingSurveys.length > 0 ? (
+              pendingSurveys.map(survey => (
+                <div 
+                  key={survey.id} 
+                  onClick={() => navigate(`/survey/${survey.id}`)}
+                  className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 transition-all active:scale-[0.98] cursor-pointer relative overflow-hidden group"
+                >
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-[#FACC15]"></div>
+                  <div className="flex justify-between items-start ml-2">
+                     <div className="flex flex-col gap-1.5">
+                        <h4 className="font-black text-slate-800 text-base leading-tight group-hover:text-blue-600 transition-colors">{survey.title}</h4>
+                        <p className="text-xs text-slate-400 font-medium line-clamp-2 leading-relaxed">{survey.description || 'Kontribusi Anda sangat berharga bagi peningkatan mutu layanan.'}</p>
+                     </div>
+                     <div className="bg-blue-50 text-[#1B2A66] p-2.5 rounded-xl shrink-0 ml-4 group-hover:bg-[#1B2A66] group-hover:text-white transition-colors">
+                        <ChevronRight size={16} strokeWidth={3} />
+                     </div>
+                  </div>
+                  <div className="mt-5 ml-2 flex items-center gap-2">
+                     <span className="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></span>
+                     <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Wajib Diisi</span>
+                  </div>
                 </div>
-                {!survey.has_submitted && (
-                   <div className="mt-4 flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 bg-[#FACC15] rounded-full animate-ping"></span>
-                      <span className="text-[9px] font-black text-[#1B2A66] uppercase tracking-widest">Belum Diisi</span>
-                   </div>
-                )}
+              ))
+            ) : (
+              // Empty State Tugas
+              <div className="text-center py-16 bg-white rounded-[2.5rem] border border-slate-100 border-dashed">
+                 <div className="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 size={40} strokeWidth={2} />
+                 </div>
+                 <h3 className="text-sm font-black text-slate-800 mb-1">Semua Tugas Selesai!</h3>
+                 <p className="text-xs font-medium text-slate-400 max-w-[200px] mx-auto leading-relaxed">Anda sudah menyelesaikan semua survei yang tersedia saat ini.</p>
               </div>
-            ))
+            )
           ) : (
-            <div className="text-center py-12">
-               <MessageCircle size={40} className="mx-auto text-slate-200 mb-4" />
-               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Belum ada survei baru.</p>
-            </div>
+            /* --- TAB RIWAYAT SELESAI --- */
+            completedSurveys.length > 0 ? (
+              completedSurveys.map(survey => (
+                <div 
+                  key={survey.id} 
+                  className="bg-slate-50 rounded-[2rem] p-6 border border-slate-100 relative"
+                >
+                  <div className="flex gap-4 items-center">
+                     <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center shrink-0">
+                        <Check size={20} strokeWidth={3} />
+                     </div>
+                     <div className="flex flex-col gap-0.5">
+                        <h4 className="font-bold text-slate-700 text-sm leading-tight line-clamp-1">{survey.title}</h4>
+                        <span className="text-[10px] font-black text-green-600 uppercase tracking-widest">Telah Berkontribusi</span>
+                     </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+               // Empty State Riwayat
+              <div className="text-center py-16">
+                 <ClipboardList size={48} className="mx-auto text-slate-200 mb-4" strokeWidth={1.5} />
+                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Belum ada riwayat survei.</p>
+              </div>
+            )
           )}
         </div>
       </main>
@@ -284,15 +352,14 @@ const SurveyPage = ({ token }) => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24 flex flex-col items-center">
-      {/* Top Progress Bar */}
-      <div className="fixed top-0 left-0 w-full h-1 bg-slate-100 z-[60]">
+      <div className="fixed top-0 left-0 w-full h-1.5 bg-slate-100 z-[60]">
         <div className="h-full bg-blue-600 transition-all duration-500 shadow-lg" style={{ width: `${calculateProgress()}%` }}></div>
       </div>
 
-      <header className="w-full bg-white border-b border-slate-100 px-6 py-5 sticky top-1 z-50 flex justify-between items-center shadow-sm">
-        <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-slate-50 rounded-xl text-slate-400"><ArrowLeft size={20} /></button>
+      <header className="w-full bg-white/90 border-b border-slate-100 px-6 py-4 sticky top-1.5 z-50 flex justify-between items-center backdrop-blur-md">
+        <button onClick={() => navigate('/dashboard')} className="p-2 bg-slate-50 hover:bg-slate-100 rounded-full text-slate-500 transition-colors"><ArrowLeft size={18} /></button>
         <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-4 py-1.5 rounded-full uppercase tracking-widest">{calculateProgress()}% Selesai</span>
-        <div className="w-8"></div>
+        <div className="w-9"></div>
       </header>
 
       <main className="px-5 py-8 space-y-6 w-full max-w-lg">
@@ -311,18 +378,18 @@ const SurveyPage = ({ token }) => {
           const isMissing = missingFields.includes(idx);
           const isAnswered = !!answers[`answer_${idx}`];
           return (
-            <div id={`q-${idx}`} key={idx} className={`bg-white rounded-[2.5rem] p-8 border-2 transition-all duration-500 ${isMissing ? 'border-rose-400' : isAnswered ? 'border-green-100 bg-green-50/20' : 'border-white shadow-xl shadow-slate-200/40'}`}>
+            <div id={`q-${idx}`} key={idx} className={`bg-white rounded-[2rem] p-7 border-2 transition-all duration-500 shadow-[0_4px_20px_rgb(0,0,0,0.03)] ${isMissing ? 'border-rose-400' : isAnswered ? 'border-green-100 bg-green-50/10' : 'border-white'}`}>
                 <div className="flex gap-4 items-start mb-6">
-                    <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-[10px] shrink-0 ${isAnswered ? 'bg-green-500 text-white shadow-lg shadow-green-100' : 'bg-[#1B2A66] text-[#FACC15]'}`}>
+                    <span className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-[10px] shrink-0 ${isAnswered ? 'bg-green-500 text-white shadow-md' : 'bg-[#1B2A66] text-[#FACC15]'}`}>
                         {isAnswered ? <Check size={14} strokeWidth={3} /> : idx + 1}
                     </span>
-                    <h3 className="font-bold text-slate-800 text-lg leading-snug">{field.data.question}</h3>
+                    <h3 className="font-bold text-slate-800 text-base leading-snug pt-1">{field.data.question}</h3>
                 </div>
 
                 {field.type === 'rating' && (
-                   <div className="flex justify-between gap-2 max-w-sm">
+                   <div className="flex justify-between gap-2 max-w-sm mx-auto">
                       {[1,2,3,4,5].map(v => (
-                         <button key={v} onClick={() => setAnswers({...answers, [`answer_${idx}`]: v})} className={`flex-1 aspect-square rounded-2xl flex flex-col items-center justify-center transition-all ${answers[`answer_${idx}`] === v ? 'bg-[#1B2A66] text-[#FACC15] shadow-xl scale-110' : 'bg-slate-50 text-slate-300'}`}>
+                         <button key={v} onClick={() => setAnswers({...answers, [`answer_${idx}`]: v})} className={`flex-1 aspect-square rounded-2xl flex flex-col items-center justify-center transition-all ${answers[`answer_${idx}`] === v ? 'bg-[#1B2A66] text-[#FACC15] shadow-xl scale-110' : 'bg-slate-50 text-slate-300 hover:bg-slate-100'}`}>
                             <Star size={20} fill={answers[`answer_${idx}`] === v ? "currentColor" : "none"} />
                             <span className="text-[9px] font-black mt-1">{v}</span>
                          </button>
@@ -331,33 +398,36 @@ const SurveyPage = ({ token }) => {
                 )}
 
                 {(field.type === 'textarea' || field.type === 'text') && (
-                   <textarea value={answers[`answer_${idx}`] || ""} onChange={(e) => setAnswers({...answers, [`answer_${idx}`]: e.target.value})} className="w-full p-6 bg-slate-50 rounded-[2rem] focus:bg-white focus:ring-4 focus:ring-blue-50 border-transparent outline-none text-sm font-bold placeholder:text-slate-200 min-h-[120px]" placeholder="Bagikan pendapat Anda di sini..." />
+                   <textarea value={answers[`answer_${idx}`] || ""} onChange={(e) => setAnswers({...answers, [`answer_${idx}`]: e.target.value})} className="w-full p-5 bg-slate-50 rounded-[1.5rem] focus:bg-white focus:ring-4 focus:ring-blue-50 border-transparent outline-none text-sm font-bold placeholder:text-slate-300 min-h-[120px] transition-all" placeholder="Ketik pendapat Anda di sini..." />
                 )}
 
                 {field.type === 'select' && (
-                   <select value={answers[`answer_${idx}`] || ""} onChange={(e) => setAnswers({...answers, [`answer_${idx}`]: e.target.value})} className="w-full p-6 bg-slate-50 rounded-[2rem] focus:bg-white border-transparent outline-none text-sm font-bold appearance-none cursor-pointer">
-                      <option value="">-- Tap untuk memilih --</option>
+                   <select value={answers[`answer_${idx}`] || ""} onChange={(e) => setAnswers({...answers, [`answer_${idx}`]: e.target.value})} className="w-full p-5 bg-slate-50 rounded-[1.5rem] focus:bg-white focus:ring-4 focus:ring-blue-50 border-transparent outline-none text-sm font-bold appearance-none cursor-pointer transition-all">
+                      <option value="">-- Ketuk untuk memilih --</option>
                       {field.data.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                    </select>
                 )}
 
-                {isMissing && <p className="mt-4 text-[9px] font-black text-rose-500 uppercase tracking-widest animate-pulse">Mohon isi bagian ini terlebih dahulu ya!</p>}
+                {isMissing && <p className="mt-4 text-[9px] font-black text-rose-500 uppercase tracking-widest animate-pulse">Wajib diisi sebelum lanjut!</p>}
             </div>
           );
         })}
 
-        <div className="py-10 text-center">
-           <button onClick={handleSubmit} disabled={submitting} className="w-full bg-[#1B2A66] text-white py-6 rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-blue-900/30 transition-all active:scale-95 disabled:opacity-50">
-              {submitting ? 'Sedang Menyimpan...' : 'Kirim Penilaian'}
+        <div className="py-8">
+           <button onClick={handleSubmit} disabled={submitting} className="w-full bg-[#1B2A66] text-white py-5 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.1em] shadow-xl shadow-blue-900/20 hover:bg-blue-800 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2">
+              {submitting ? 'Menyimpan Data...' : <><Send size={18} /> Kirim Penilaian</>}
            </button>
-           <p className="mt-6 text-[10px] font-bold text-slate-300 uppercase tracking-widest">Kerahasiaan Data Terjamin</p>
+           <div className="flex items-center justify-center gap-2 mt-5">
+              <ShieldCheck size={14} className="text-slate-300" />
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Kerahasiaan Data Terjamin</p>
+           </div>
         </div>
       </main>
     </div>
   );
 };
 
-// --- KOMPONEN: SUCCESS (Pesta Kecil) ---
+// --- KOMPONEN: SUCCESS ---
 const SuccessPage = ({ user, onLogout }) => {
   const navigate = useNavigate();
   return (
@@ -367,14 +437,14 @@ const SuccessPage = ({ user, onLogout }) => {
           <div className="w-32 h-32 bg-white rounded-[3rem] border-4 border-green-500 flex items-center justify-center shadow-2xl shadow-green-100">
              <CheckCircle2 size={64} className="text-green-500" strokeWidth={2.5} />
           </div>
-          <Sparkles className="absolute -top-4 -right-4 text-yellow-400 animate-bounce" size={32} />
+          <Sparkles className="absolute -top-4 -right-4 text-[#FACC15] animate-bounce" size={32} />
        </div>
-       <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-4">Laporan Terkirim!</h2>
-       <p className="text-slate-400 text-sm font-medium leading-relaxed mb-12 px-6">Terima kasih atas kontribusi Anda, <b>{user?.name.split(' ')[0]}</b>. Masukan Anda sangat berarti bagi peningkatan mutu Stella Maris.</p>
+       <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-4">Selesai!</h2>
+       <p className="text-slate-500 text-sm font-medium leading-relaxed mb-12 px-2">Terima kasih banyak atas waktunya, <b>{user?.name.split(' ')[0]}</b>. Masukan Anda langsung masuk ke database pusat.</p>
        
-       <div className="w-full max-w-xs space-y-4">
-          <button onClick={() => navigate('/dashboard')} className="w-full py-5 rounded-2xl bg-[#1B2A66] text-white font-black text-xs uppercase tracking-widest shadow-xl">Balik ke Beranda</button>
-          <button onClick={onLogout} className="w-full py-5 text-slate-300 font-black text-[10px] uppercase tracking-widest hover:text-red-500 transition-colors">Selesaikan Sesi</button>
+       <div className="w-full max-w-xs space-y-3">
+          <button onClick={() => navigate('/dashboard')} className="w-full py-4 rounded-2xl bg-[#1B2A66] text-white font-black text-xs uppercase tracking-widest shadow-xl active:scale-[0.98] transition-all">Kembali ke Beranda</button>
+          <button onClick={onLogout} className="w-full py-4 text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:text-red-500 hover:bg-red-50 rounded-2xl transition-colors">Keluar Aplikasi</button>
        </div>
     </div>
   );
